@@ -24,9 +24,28 @@ import (
 	"github.com/tektoncd/cli/pkg/deleter"
 	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/tektoncd/cli/pkg/options"
+	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
+
+// clusterTriggerExists validates that the first argument is a valid clustertriggerbinding name
+func clusterTriggerExists(args []string, p cli.Params) error {
+
+	c, err := p.Clients()
+	if err != nil {
+		return err
+	}
+	var errorList error
+	for _, name := range args {
+		_, err := clustertriggerbinding.Get(c, name, metav1.GetOptions{})
+		if err == nil {
+			return nil
+		}
+		errorList = multierr.Append(errorList, err)
+	}
+	return errorList
+}
 
 func deleteCommand(p cli.Params) *cobra.Command {
 	opts := &options.DeleteOptions{Resource: "clustertriggerbinding", ForceDelete: false, DeleteAll: false}
@@ -56,6 +75,10 @@ or
 				In:  cmd.InOrStdin(),
 				Out: cmd.OutOrStdout(),
 				Err: cmd.OutOrStderr(),
+			}
+
+			if err := clusterTriggerExists(args, p); err != nil {
+				return err
 			}
 
 			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {

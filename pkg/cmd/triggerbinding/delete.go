@@ -24,9 +24,29 @@ import (
 	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/tektoncd/cli/pkg/options"
 	"github.com/tektoncd/cli/pkg/triggerbinding"
+	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
+
+// triggerBindingExists validates that the first argument is a valid triggerbinding name
+func triggerBindingExists(args []string, p cli.Params) error {
+
+	c, err := p.Clients()
+	if err != nil {
+		return err
+	}
+	var errorList error
+	ns := p.Namespace()
+	for _, name := range args {
+		_, err := triggerbinding.Get(c, name, metav1.GetOptions{}, ns)
+		if err == nil {
+			return nil
+		}
+		errorList = multierr.Append(errorList, err)
+	}
+	return errorList
+}
 
 func deleteCommand(p cli.Params) *cobra.Command {
 	opts := &options.DeleteOptions{Resource: "triggerbinding", ForceDelete: false, DeleteAllNs: false}
@@ -56,6 +76,10 @@ or
 				In:  cmd.InOrStdin(),
 				Out: cmd.OutOrStdout(),
 				Err: cmd.OutOrStderr(),
+			}
+
+			if err := triggerBindingExists(args, p); err != nil {
+				return err
 			}
 
 			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {

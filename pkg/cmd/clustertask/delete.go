@@ -25,10 +25,29 @@ import (
 	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/tektoncd/cli/pkg/options"
 	trlist "github.com/tektoncd/cli/pkg/taskrun/list"
+	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
+
+// ctExists validates that the first argument is a valid clustertask name
+func ctExists(args []string, p cli.Params) error {
+
+	c, err := p.Clients()
+	if err != nil {
+		return err
+	}
+	var errorList error
+	for _, name := range args {
+		_, err := clustertask.Get(c, name, metav1.GetOptions{})
+		if err == nil {
+			return nil
+		}
+		errorList = multierr.Append(errorList, err)
+	}
+	return errorList
+}
 
 func deleteCommand(p cli.Params) *cobra.Command {
 	opts := &options.DeleteOptions{Resource: "ClusterTask", ForceDelete: false, DeleteAll: false}
@@ -58,6 +77,10 @@ or
 				In:  cmd.InOrStdin(),
 				Out: cmd.OutOrStdout(),
 				Err: cmd.OutOrStderr(),
+			}
+
+			if err := ctExists(args, p); err != nil {
+				return err
 			}
 
 			if err := opts.CheckOptions(s, args, ""); err != nil {
