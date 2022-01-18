@@ -17,9 +17,6 @@ package pipelinerun
 import (
 	"errors"
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/spf13/cobra"
 	"github.com/tektoncd/cli/pkg/actions"
 	"github.com/tektoncd/cli/pkg/cli"
@@ -29,10 +26,34 @@ import (
 	pr "github.com/tektoncd/cli/pkg/pipelinerun"
 	prsort "github.com/tektoncd/cli/pkg/pipelinerun/sort"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
+	"strings"
+	"time"
 )
+
+// prExists validates that the first argument is a valid pipelinerun name
+func prExists(args []string, p cli.Params) error {
+
+	c, err := p.Clients()
+	if err != nil {
+		return err
+	}
+	var errorList error
+	ns := p.Namespace()
+	for _, name := range args {
+		_, err := pr.Get(c, name, metav1.GetOptions{}, ns)
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+		}
+	}
+	if errorList != nil {
+		return errorList
+	}
+	return nil
+}
 
 func deleteCommand(p cli.Params) *cobra.Command {
 	opts := &options.DeleteOptions{Resource: "PipelineRun", ForceDelete: false, ParentResource: "Pipeline", DeleteAllNs: false}
@@ -83,6 +104,10 @@ or
 
 			if (opts.Keep > 0 || opts.KeepSince > 0) && opts.DeleteAllNs && opts.ParentResourceName != "" {
 				return fmt.Errorf("--keep or --keep-since, --all and --%s cannot be used together", strings.ToLower(opts.ParentResource))
+			}
+
+			if err := prExists(args, p); err != nil {
+				return err
 			}
 
 			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {

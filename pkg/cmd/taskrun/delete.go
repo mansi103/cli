@@ -17,28 +17,49 @@ package taskrun
 import (
 	"errors"
 	"fmt"
-	"strings"
-	"time"
-
-	"github.com/tektoncd/cli/pkg/formatted"
-	taskpkg "github.com/tektoncd/cli/pkg/task"
-	trsort "github.com/tektoncd/cli/pkg/taskrun/sort"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-
 	"github.com/spf13/cobra"
 	"github.com/tektoncd/cli/pkg/actions"
 	"github.com/tektoncd/cli/pkg/cli"
 	"github.com/tektoncd/cli/pkg/deleter"
+	"github.com/tektoncd/cli/pkg/formatted"
 	"github.com/tektoncd/cli/pkg/options"
+	taskpkg "github.com/tektoncd/cli/pkg/task"
+	"github.com/tektoncd/cli/pkg/taskrun"
 	trlist "github.com/tektoncd/cli/pkg/taskrun/list"
+	trsort "github.com/tektoncd/cli/pkg/taskrun/sort"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
+	"strings"
+	"time"
 )
 
 type deleteOptions struct {
 	ClusterTaskName string
 	TaskName        string
+}
+
+// trExists validates that the first argument is a valid taskrun name
+func trExists(args []string, p cli.Params) error {
+
+	c, err := p.Clients()
+	if err != nil {
+		return err
+	}
+	var errorList error
+	ns := p.Namespace()
+	for _, name := range args {
+		_, err := taskrun.Get(c, name, metav1.GetOptions{}, ns)
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+		}
+	}
+	if errorList != nil {
+		return errorList
+	}
+	return nil
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -102,6 +123,10 @@ or
 
 			if (opts.Keep > 0 || opts.KeepSince > 0) && opts.DeleteAllNs && opts.ParentResourceName != "" {
 				return fmt.Errorf("--keep or --keep-since, --all and --%s cannot be used together", strings.ToLower(opts.ParentResource))
+			}
+
+			if err := trExists(args, p); err != nil {
+				return err
 			}
 
 			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {

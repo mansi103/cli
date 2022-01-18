@@ -167,7 +167,7 @@ func TestPipelineDelete(t *testing.T) {
 			input:       seeds[0].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"pipeline\": pipelines.tekton.dev \"pipeline\" not found",
+			want:        "pipelines.tekton.dev \"pipeline\" not found",
 		},
 		{
 			name:        "With force delete flag (shorthand)",
@@ -212,7 +212,7 @@ func TestPipelineDelete(t *testing.T) {
 			input:       seeds[2].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"nonexistent\": pipelines.tekton.dev \"nonexistent\" not found",
+			want:        "pipelines.tekton.dev \"nonexistent\" not found",
 		},
 		{
 			name:        "Remove multiple non existent resources",
@@ -221,7 +221,7 @@ func TestPipelineDelete(t *testing.T) {
 			input:       seeds[2].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"nonexistent\": pipelines.tekton.dev \"nonexistent\" not found; failed to delete Pipeline \"nonexistent2\": pipelines.tekton.dev \"nonexistent2\" not found",
+			want:        "pipelines.tekton.dev \"nonexistent\" not found; pipelines.tekton.dev \"nonexistent2\" not found",
 		},
 		{
 			name:        "Remove multiple non existent resources with --prs flag",
@@ -230,7 +230,7 @@ func TestPipelineDelete(t *testing.T) {
 			input:       seeds[2].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"nonexistent\": pipelines.tekton.dev \"nonexistent\" not found; failed to delete Pipeline \"nonexistent2\": pipelines.tekton.dev \"nonexistent2\" not found",
+			want:        "pipelines.tekton.dev \"nonexistent\" not found; pipelines.tekton.dev \"nonexistent2\" not found",
 		},
 		{
 			name:        "With --prs flag, reply yes",
@@ -271,8 +271,8 @@ func TestPipelineDelete(t *testing.T) {
 		{
 			name:        "Error from using pipeline name with --all",
 			command:     []string{"delete", "pipeline", "--all", "-n", "ns"},
-			dynamic:     seeds[6].dynamicClient,
-			input:       seeds[6].pipelineClient,
+			dynamic:     seeds[7].dynamicClient,
+			input:       seeds[7].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
 			want:        "--all flag should not have any arguments or flags specified with it",
@@ -456,7 +456,7 @@ func TestPipelineDelete_v1beta1(t *testing.T) {
 			input:       seeds[0].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"pipeline\": pipelines.tekton.dev \"pipeline\" not found",
+			want:        "pipelines.tekton.dev \"pipeline\" not found",
 		},
 		{
 			name:        "With force delete flag (shorthand)",
@@ -501,7 +501,7 @@ func TestPipelineDelete_v1beta1(t *testing.T) {
 			input:       seeds[2].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"nonexistent\": pipelines.tekton.dev \"nonexistent\" not found",
+			want:        "pipelines.tekton.dev \"nonexistent\" not found",
 		},
 		{
 			name:        "Remove multiple non existent resources",
@@ -510,7 +510,7 @@ func TestPipelineDelete_v1beta1(t *testing.T) {
 			input:       seeds[2].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"nonexistent\": pipelines.tekton.dev \"nonexistent\" not found; failed to delete Pipeline \"nonexistent2\": pipelines.tekton.dev \"nonexistent2\" not found",
+			want:        "pipelines.tekton.dev \"nonexistent\" not found; pipelines.tekton.dev \"nonexistent2\" not found",
 		},
 		{
 			name:        "Remove multiple non existent resources with --prs flag",
@@ -519,7 +519,7 @@ func TestPipelineDelete_v1beta1(t *testing.T) {
 			input:       seeds[2].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Pipeline \"nonexistent\": pipelines.tekton.dev \"nonexistent\" not found; failed to delete Pipeline \"nonexistent2\": pipelines.tekton.dev \"nonexistent2\" not found",
+			want:        "pipelines.tekton.dev \"nonexistent\" not found; pipelines.tekton.dev \"nonexistent2\" not found",
 		},
 		{
 			name:        "With delete all flag, reply yes",
@@ -560,8 +560,8 @@ func TestPipelineDelete_v1beta1(t *testing.T) {
 		{
 			name:        "Error from using pipeline name with --all",
 			command:     []string{"delete", "pipeline", "--all", "-n", "ns"},
-			dynamic:     seeds[6].dynamicClient,
-			input:       seeds[6].pipelineClient,
+			dynamic:     seeds[7].dynamicClient,
+			input:       seeds[7].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
 			want:        "--all flag should not have any arguments or flags specified with it",
