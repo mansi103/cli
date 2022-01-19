@@ -17,6 +17,9 @@ package taskrun
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/spf13/cobra"
 	"github.com/tektoncd/cli/pkg/actions"
 	"github.com/tektoncd/cli/pkg/cli"
@@ -32,8 +35,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
-	"strings"
-	"time"
 )
 
 type deleteOptions struct {
