@@ -193,7 +193,7 @@ func TestTriggerBindingDelete(t *testing.T) {
 			input:       seeds[1],
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete TriggerBinding \"nonexistent\": triggerbindings.triggers.tekton.dev \"nonexistent\" not found",
+			want:        "triggerbindings.triggers.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

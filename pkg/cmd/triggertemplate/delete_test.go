@@ -193,7 +193,7 @@ func TestTriggerTemplateDelete(t *testing.T) {
 			input:       seeds[1],
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete TriggerTemplate \"nonexistent\": triggertemplates.triggers.tekton.dev \"nonexistent\" not found",
+			want:        "triggertemplates.triggers.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

@@ -31,22 +31,24 @@ import (
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// ctExists validates that the first argument is a valid clustertask name
-func ctExists(args []string, p cli.Params) error {
+// ctExists validates that the arguments are valid ClusterTask names
+func ctExists(args []string, p cli.Params) ([]string, error) {
 
+	availableCts := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableCts, err
 	}
 	var errorList error
 	for _, name := range args {
 		_, err := clustertask.Get(c, name, metav1.GetOptions{})
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableCts = append(availableCts, name)
 	}
-	return errorList
+	return availableCts, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -79,15 +81,19 @@ or
 				Err: cmd.OutOrStderr(),
 			}
 
-			if err := ctExists(args, p); err != nil {
+			availableCts, errs := ctExists(args, p)
+			if len(availableCts) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availableCts, ""); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, ""); err != nil {
+			if err := deleteClusterTasks(opts, s, p, availableCts); err != nil {
 				return err
 			}
-
-			return deleteClusterTasks(opts, s, p, args)
+			return errs
 		},
 	}
 	f.AddFlags(c)

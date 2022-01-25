@@ -29,23 +29,25 @@ import (
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// triggerBindingExists validates that the first argument is a valid triggerbinding name
-func triggerBindingExists(args []string, p cli.Params) error {
+// triggerBindingExists validates that the arguments are valid TriggerBinding names
+func triggerBindingExists(args []string, p cli.Params) ([]string, error) {
 
+	availableTBs := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableTBs, err
 	}
 	var errorList error
 	ns := p.Namespace()
 	for _, name := range args {
 		_, err := triggerbinding.Get(c, name, metav1.GetOptions{}, ns)
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableTBs = append(availableTBs, name)
 	}
-	return errorList
+	return availableTBs, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -78,15 +80,19 @@ or
 				Err: cmd.OutOrStderr(),
 			}
 
-			if err := triggerBindingExists(args, p); err != nil {
+			availableTbs, errs := triggerBindingExists(args, p)
+			if len(availableTbs) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availableTbs, p.Namespace()); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {
+			if err := deleteTriggerBindings(s, p, availableTbs, opts.DeleteAllNs); err != nil {
 				return err
 			}
-
-			return deleteTriggerBindings(s, p, args, opts.DeleteAllNs)
+			return errs
 		},
 	}
 	f.AddFlags(c)

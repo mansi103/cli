@@ -318,7 +318,7 @@ func TestTaskDelete(t *testing.T) {
 			input:       seeds[8].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Task \"nonexistent\": tasks.tekton.dev \"nonexistent\" not found",
+			want:        "tasks.tekton.dev \"nonexistent\" not found",
 		},
 	}
 
@@ -631,7 +631,7 @@ func TestTaskDelete_v1beta1(t *testing.T) {
 			input:       seeds[8].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete Task \"nonexistent\": tasks.tekton.dev \"nonexistent\" not found",
+			want:        "tasks.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

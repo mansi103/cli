@@ -29,23 +29,25 @@ import (
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// eventListenerExists validates that the first argument is a valid eventlistener name
-func eventListenerExists(args []string, p cli.Params) error {
+// eventListenerExists validates that the arguments are valid EventListener names
+func eventListenerExists(args []string, p cli.Params) ([]string, error) {
 
+	availableELs := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableELs, err
 	}
 	var errorList error
 	ns := p.Namespace()
 	for _, name := range args {
 		_, err := eventlistener.Get(c, name, metav1.GetOptions{}, ns)
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableELs = append(availableELs, name)
 	}
-	return errorList
+	return availableELs, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -78,15 +80,19 @@ or
 				Err: cmd.OutOrStderr(),
 			}
 
-			if err := eventListenerExists(args, p); err != nil {
+			availableELs, errs := eventListenerExists(args, p)
+			if len(availableELs) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availableELs, p.Namespace()); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {
+			if err := deleteEventListeners(s, p, availableELs, opts.DeleteAllNs); err != nil {
 				return err
 			}
-
-			return deleteEventListeners(s, p, args, opts.DeleteAllNs)
+			return errs
 		},
 	}
 	f.AddFlags(c)

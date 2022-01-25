@@ -174,7 +174,7 @@ func TestClusterTriggerBindingDelete(t *testing.T) {
 			input:       seeds[1],
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete ClusterTriggerBinding \"nonexistent\": clustertriggerbindings.triggers.tekton.dev \"nonexistent\" not found",
+			want:        "clustertriggerbindings.triggers.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

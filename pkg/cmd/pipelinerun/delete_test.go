@@ -470,7 +470,7 @@ func TestPipelineRunDelete(t *testing.T) {
 			input:       seeds[9].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete PipelineRun \"nonexistent\": pipelineruns.tekton.dev \"nonexistent\" not found",
+			want:        "pipelineruns.tekton.dev \"nonexistent\" not found",
 		},
 	}
 
@@ -869,7 +869,7 @@ func TestPipelineRunDelete_v1beta1(t *testing.T) {
 			input:       seeds[7].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete PipelineRun \"nonexistent\": pipelineruns.tekton.dev \"nonexistent\" not found",
+			want:        "pipelineruns.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

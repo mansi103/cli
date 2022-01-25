@@ -303,7 +303,7 @@ func TestClusterTaskDelete(t *testing.T) {
 			input:       seeds[5].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete ClusterTask \"nonexistent\": clustertasks.tekton.dev \"nonexistent\" not found",
+			want:        "clustertasks.tekton.dev \"nonexistent\" not found",
 		},
 	}
 
@@ -601,7 +601,7 @@ func TestClusterTaskDelete_v1beta1(t *testing.T) {
 			input:       seeds[5].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete ClusterTask \"nonexistent\": clustertasks.tekton.dev \"nonexistent\" not found",
+			want:        "clustertasks.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

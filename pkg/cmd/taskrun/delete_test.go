@@ -576,7 +576,7 @@ func TestTaskRunDelete(t *testing.T) {
 			input:       seeds[8].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete TaskRun \"nonexistent\": taskruns.tekton.dev \"nonexistent\" not found",
+			want:        "taskruns.tekton.dev \"nonexistent\" not found",
 		},
 	}
 
@@ -1131,7 +1131,7 @@ func TestTaskRunDelete_v1beta1(t *testing.T) {
 			input:       seeds[8].pipelineClient,
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete TaskRun \"nonexistent\": taskruns.tekton.dev \"nonexistent\" not found",
+			want:        "taskruns.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

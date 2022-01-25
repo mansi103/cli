@@ -194,7 +194,7 @@ func TestEventListenerDelete(t *testing.T) {
 			input:       seeds[1],
 			inputStream: nil,
 			wantError:   true,
-			want:        "failed to delete EventListener \"nonexistent\": eventlisteners.triggers.tekton.dev \"nonexistent\" not found",
+			want:        "failed to get EventListener nonexistent: eventlisteners.triggers.tekton.dev \"nonexistent\" not found",
 		},
 	}
 

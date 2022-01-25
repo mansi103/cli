@@ -42,23 +42,25 @@ type deleteOptions struct {
 	TaskName        string
 }
 
-// trExists validates that the first argument is a valid taskrun name
-func trExists(args []string, p cli.Params) error {
+// trExists validates that the arguments are valid TaskRun names
+func trExists(args []string, p cli.Params) ([]string, error) {
 
+	availableTrs := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableTrs, err
 	}
 	var errorList error
 	ns := p.Namespace()
 	for _, name := range args {
 		_, err := taskrun.Get(c, name, metav1.GetOptions{}, ns)
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableTrs = append(availableTrs, name)
 	}
-	return errorList
+	return availableTrs, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -124,15 +126,19 @@ or
 				return fmt.Errorf("--keep or --keep-since, --all and --%s cannot be used together", strings.ToLower(opts.ParentResource))
 			}
 
-			if err := trExists(args, p); err != nil {
+			availableTrs, errs := trExists(args, p)
+			if len(availableTrs) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availableTrs, p.Namespace()); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {
+			if err := deleteTaskRuns(s, p, availableTrs, opts); err != nil {
 				return err
 			}
-
-			return deleteTaskRuns(s, p, args, opts)
+			return errs
 		},
 	}
 	f.AddFlags(c)

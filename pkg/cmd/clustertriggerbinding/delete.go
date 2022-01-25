@@ -29,22 +29,24 @@ import (
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// clusterTriggerExists validates that the first argument is a valid clustertriggerbinding name
-func clusterTriggerExists(args []string, p cli.Params) error {
+// clusterTriggerBindingExists validates that the arguments are valid ClusterTriggerBinding names
+func clusterTriggerBindingExists(args []string, p cli.Params) ([]string, error) {
 
+	availableCTBs := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableCTBs, err
 	}
 	var errorList error
 	for _, name := range args {
 		_, err := clustertriggerbinding.Get(c, name, metav1.GetOptions{})
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableCTBs = append(availableCTBs, name)
 	}
-	return errorList
+	return availableCTBs, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -77,15 +79,19 @@ or
 				Err: cmd.OutOrStderr(),
 			}
 
-			if err := clusterTriggerExists(args, p); err != nil {
+			availbleCTBs, errs := clusterTriggerBindingExists(args, p)
+			if len(availbleCTBs) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availbleCTBs, p.Namespace()); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {
+			if err := deleteClusterTriggerBindings(s, p, availbleCTBs, opts.DeleteAll); err != nil {
 				return err
 			}
-
-			return deleteClusterTriggerBindings(s, p, args, opts.DeleteAll)
+			return errs
 		},
 	}
 	f.AddFlags(c)

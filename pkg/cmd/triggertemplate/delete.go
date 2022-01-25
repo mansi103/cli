@@ -32,23 +32,25 @@ import (
 
 var triggertemplateGroupResource = schema.GroupVersionResource{Group: "triggers.tekton.dev", Resource: "triggertemplates"}
 
-// triggerTemplateExists validates that the first argument is a valid triggertemplate name
-func triggerTemplateExists(args []string, p cli.Params) error {
+// triggerTemplateExists validates that the arguments are valid TriggerTemplate names
+func triggerTemplateExists(args []string, p cli.Params) ([]string, error) {
 
+	availableTts := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableTts, err
 	}
 	var errorList error
 	ns := p.Namespace()
 	for _, name := range args {
 		_, err := triggertemplate.Get(c, name, metav1.GetOptions{}, ns)
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableTts = append(availableTts, name)
 	}
-	return errorList
+	return availableTts, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -81,15 +83,19 @@ or
 				Err: cmd.OutOrStderr(),
 			}
 
-			if err := triggerTemplateExists(args, p); err != nil {
+			availableTts, errs := triggerTemplateExists(args, p)
+			if len(availableTts) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availableTts, p.Namespace()); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {
+			if err := deleteTriggerTemplates(s, p, availableTts, opts.DeleteAllNs); err != nil {
 				return err
 			}
-
-			return deleteTriggerTemplates(s, p, args, opts.DeleteAllNs)
+			return errs
 		},
 	}
 	f.AddFlags(c)

@@ -31,23 +31,26 @@ import (
 	cliopts "k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// taskExists validates that the first argument is a valid task name
-func taskExists(args []string, p cli.Params) error {
+// taskExists validates that the arguments are valid Task names
+func taskExists(args []string, p cli.Params) ([]string, error) {
 
+	availableTaskNames := make([]string, 0)
 	c, err := p.Clients()
 	if err != nil {
-		return err
+		return availableTaskNames, err
 	}
 	var errorList error
 	ns := p.Namespace()
 	for _, name := range args {
 		_, err := task.Get(c, name, metav1.GetOptions{}, ns)
-		if err == nil {
-			return nil
+		if err != nil {
+			errorList = multierr.Append(errorList, err)
+			continue
 		}
-		errorList = multierr.Append(errorList, err)
+		availableTaskNames = append(availableTaskNames, name)
+
 	}
-	return errorList
+	return availableTaskNames, errorList
 }
 
 func deleteCommand(p cli.Params) *cobra.Command {
@@ -81,15 +84,19 @@ or
 				Err: cmd.OutOrStderr(),
 			}
 
-			if err := taskExists(args, p); err != nil {
+			availableTaskNames, errs := taskExists(args, p)
+			if len(availableTaskNames) == 0 && errs != nil {
+				return errs
+			}
+
+			if err := opts.CheckOptions(s, availableTaskNames, p.Namespace()); err != nil {
 				return err
 			}
 
-			if err := opts.CheckOptions(s, args, p.Namespace()); err != nil {
+			if err := deleteTask(opts, s, p, availableTaskNames); err != nil {
 				return err
 			}
-
-			return deleteTask(opts, s, p, args)
+			return errs
 		},
 	}
 	f.AddFlags(c)
